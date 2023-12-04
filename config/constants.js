@@ -32,13 +32,14 @@ const corsOptions = {
 
 // DB connection
 const pool = new Pool({
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT, // default Postgres port
-  database: process.env.DB_DATABASE,
-  // connectionString:
-  //   'postgres://scanorder_user:uFM7uss9EAjh95qJ0Ubkjxq87QHQOnoD@dpg-clmlqdsjtl8s73a5vqtg-a.oregon-postgres.render.com/scanorder?ssl=true',
+  // user: process.env.DB_USER,
+  // password: process.env.DB_PASSWORD,
+  // host: process.env.DB_HOST,
+  // port: process.env.DB_PORT, // default Postgres port
+  // database: process.env.DB_DATABASE,
+  connectionString:
+    // 'postgres://scanorder_user:uFM7uss9EAjh95qJ0Ubkjxq87QHQOnoD@dpg-clmlqdsjtl8s73a5vqtg-a/scanorder',
+    'postgres://scanorder_user:uFM7uss9EAjh95qJ0Ubkjxq87QHQOnoD@dpg-clmlqdsjtl8s73a5vqtg-a.oregon-postgres.render.com/scanorder?ssl=true',
 });
 
 // query function
