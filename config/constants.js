@@ -39,7 +39,7 @@ const pool = new Pool({
   // database: process.env.DB_DATABASE,
   connectionString:
     // 'postgres://scanorder_user:uFM7uss9EAjh95qJ0Ubkjxq87QHQOnoD@dpg-clmlqdsjtl8s73a5vqtg-a/scanorder',
-    'postgres://scanorder_user:uFM7uss9EAjh95qJ0Ubkjxq87QHQOnoD@dpg-clmlqdsjtl8s73a5vqtg-a.oregon-postgres.render.com/scanorder?ssl=true',
+    `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}`,
 });
 
 // query function
