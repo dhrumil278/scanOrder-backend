@@ -11,15 +11,16 @@ let { generateToken } = require('../../helpers/jwt/create');
 let { emailDataValidation } = require('../../helpers/mail/emailDataValidation');
 let { sendMail } = require('../../helpers/mail/sendMail');
 
-let registerUser = async (req, res) => {
-  console.log('Register User Called...');
+let ownerRegister = async (req, res) => {
+  console.log('Register Owner Called...');
   try {
-    let { email, password, username } = req.body;
+    let { email, password, username, shopname } = req.body;
 
     let reqData = {
       email: email,
       password: password,
       username: username,
+      shopname: shopname,
     };
 
     // validate Data
@@ -37,7 +38,7 @@ let registerUser = async (req, res) => {
 
     // Check is this a New User or Not
     let findUser = await query(
-      `select * from pguser as u where ("email"=$1 or "username"=$2) and "isVerified"=$3`,
+      `select * from pgowner as u where ("email"=$1 or "username"=$2) and "isVerified"=$3`,
       [email, username, true],
     );
 
@@ -51,12 +52,13 @@ let registerUser = async (req, res) => {
     let hash = await bcrypt.hash(password, 10);
 
     let queryString =
-      'insert into pguser ("id","username","email","password","createdAt","updatedAt") values($1,$2,$3,$4,$5,$6) returning *';
+      'insert into pgowner ("id","username","email","password","shopname","createdAt","updatedAt") values($1,$2,$3,$4,$5,$6,$7) returning *';
     let values = [
       uuidv4(),
       username,
       email,
       hash,
+      shopname,
       parseInt(moment.utc().valueOf()),
       parseInt(moment.utc().valueOf()),
     ];
@@ -74,7 +76,7 @@ let registerUser = async (req, res) => {
 
     // save token in DB
     let updateUser = await query(
-      'update pguser set "accessToken" = $1,"updatedAt"=$2 where id = $3',
+      'update pgowner set "accessToken" = $1,"updatedAt"=$2 where id = $3',
       [token.data, moment.utc().valueOf(), userResult.rows[0].id],
     );
 
@@ -120,8 +122,8 @@ let registerUser = async (req, res) => {
   }
 };
 
-let updateProfile = async (req, res) => {
-  console.log('updateProfile called..');
+let ownerUpdateProfile = async (req, res) => {
+  console.log('Owner updateProfile called..');
   try {
     let { firstname, lastname, phone, address, city, state, country, zipcode } =
       req.body;
@@ -162,7 +164,7 @@ let updateProfile = async (req, res) => {
 
     // find the active user in DB
     let findUser = await query(
-      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      'select * from pgowner where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
       [userId],
     );
 
@@ -174,7 +176,7 @@ let updateProfile = async (req, res) => {
 
     // save token in DB
     let updateUser = await query(
-      'update pguser set "firstname" = $1,"lastname"=$2, "phone"=$3,"address"=$4,"city"=$5,"state"=$6,"country"=$7,"zipcode"=$8,"updatedAt"=$9 where id = $10 returning *',
+      'update pgowner set "firstname" = $1,"lastname"=$2, "phone"=$3,"address"=$4,"city"=$5,"state"=$6,"country"=$7,"zipcode"=$8,"updatedAt"=$9 where id = $10 returning *',
       [
         firstname,
         lastname,
@@ -203,10 +205,11 @@ let updateProfile = async (req, res) => {
   }
 };
 
-const userChangePassword = async (req, res) => {
-  console.log('userChangePassword called...');
+const ownerChangePassword = async (req, res) => {
+  console.log('Owner ChangePassword called...');
   try {
     const { password, newPassword } = req.body;
+
     // get the userId from the middleware
     let userId = req.userId;
 
@@ -227,7 +230,7 @@ const userChangePassword = async (req, res) => {
 
     // find the active user in DB
     let findUser = await query(
-      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      'select * from pgowner where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
       [userId],
     );
 
@@ -249,7 +252,7 @@ const userChangePassword = async (req, res) => {
 
     // save token in DB
     let updateUser = await query(
-      'update pguser set "password" = $1, "updatedAt"=$2 where id = $3',
+      'update pgowner set "password" = $1, "updatedAt"=$2 where id = $3',
       [newHash, moment.utc().valueOf(), userId],
     );
 
@@ -266,7 +269,7 @@ const userChangePassword = async (req, res) => {
 };
 
 module.exports = {
-  registerUser,
-  updateProfile,
-  userChangePassword,
+  ownerRegister,
+  ownerUpdateProfile,
+  ownerChangePassword,
 };

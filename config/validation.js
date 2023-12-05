@@ -12,22 +12,47 @@ const userValidation = (reqData) => {
           email: reqData.email,
           password: reqData.password,
           username: reqData.username,
+          shopname: reqData.shopname,
         };
         rules = {
           email: 'string|required',
           password: 'string|required',
           username: 'string|required',
+          shopname: 'string|required',
         };
         break;
 
-      case Events.LOGIN:
+      case Events.UPDATE_PROFILE:
         data = {
-          email: reqData.email,
-          password: reqData.password,
+          firstname: reqData.firstname,
+          lastname: reqData.lastname,
+          phone: reqData.phone,
+          address: reqData.address,
+          city: reqData.city,
+          state: reqData.state,
+          country: reqData.country,
+          zipcode: reqData.zipcode,
         };
         rules = {
-          email: 'string|required',
+          firstname: 'string|required',
+          lastname: 'string|required',
+          phone: 'string|numeric',
+          address: 'string|required',
+          city: 'string|required',
+          state: 'string|required',
+          country: 'string|required',
+          zipcode: 'string|numeric',
+        };
+        break;
+
+      case Events.USER_CHANGE_PASSWORD:
+        data = {
+          password: reqData.password,
+          newPassword: reqData.newPassword,
+        };
+        rules = {
           password: 'string|required',
+          newPassword: 'string|required',
         };
         break;
 
@@ -139,7 +164,96 @@ const userAuthValidation = (reqData) => {
   }
 };
 
+const foodValidation = (reqData) => {
+  console.log('food data Validation called...');
+  try {
+    let data;
+    let rules;
+
+    switch (reqData.eventCode) {
+      case Events.ADD_FOOD_ITEM:
+        data = {
+          title: reqData.title,
+          description: reqData.description,
+          price: reqData.price,
+          isVeg: reqData.isVeg,
+          category: reqData.category,
+        };
+        rules = {
+          title: 'string|required',
+          description: 'string|required',
+          price: 'numeric|required',
+          isVeg: 'boolean|required',
+          category: 'string|required',
+        };
+        break;
+
+      case Events.UPDATE_FOOD:
+        data = {
+          title: reqData.title,
+          description: reqData.description,
+          price: reqData.price,
+          isVeg: reqData.isVeg,
+          category: reqData.category,
+          foodId: reqData.foodId,
+        };
+        rules = {
+          title: 'string|required',
+          description: 'string|required',
+          price: 'numeric|required',
+          isVeg: 'boolean|required',
+          category: 'string|required',
+          foodId: 'string|required',
+        };
+        break;
+
+      case Events.DELETE_FOOD:
+        data = {
+          foodId: reqData.foodId,
+        };
+        rules = {
+          foodId: 'string|required',
+        };
+        break;
+
+      case Events.GET_ONE_FOOD:
+        data = {
+          foodId: reqData.foodId,
+        };
+        rules = {
+          foodId: 'string|required',
+        };
+        break;
+
+      default:
+        // nothing to do with default
+        break;
+    }
+
+    const validate = new Validator(data, rules);
+    let result = {};
+
+    if (validate.passes()) {
+      console.log('valiation success');
+      result['hasError'] = false;
+    }
+    if (validate.fails()) {
+      console.log('validation fails');
+      result['hasError'] = true;
+      result['error'] = validate.errors.all();
+    }
+
+    return result;
+  } catch (error) {
+    console.log('error: ', error);
+    return {
+      hasError: true,
+      error: error,
+    };
+  }
+};
 module.exports = {
   userValidation,
   userAuthValidation,
+  foodValidation,
 };

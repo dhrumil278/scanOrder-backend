@@ -10,8 +10,8 @@ let { generateToken } = require('../../helpers/jwt/create');
 let { emailDataValidation } = require('../../helpers/mail/emailDataValidation');
 let { sendMail } = require('../../helpers/mail/sendMail');
 
-let login = async (req, res) => {
-  console.log('login called...');
+let ownerLogin = async (req, res) => {
+  console.log('Owner login called...');
   try {
     let { email, password } = req.body;
 
@@ -32,7 +32,7 @@ let login = async (req, res) => {
     }
 
     let findUser = await query(
-      'select * from pguser where "email" = $1 and "isDeleted" =false and "isVerified" =true and "isActive" =true ',
+      'select * from pgowner where "email" = $1 and "isDeleted" =false and "isVerified" =true and "isActive" =true ',
       [email],
     );
 
@@ -64,7 +64,7 @@ let login = async (req, res) => {
 
     // save token in DB
     let updateUser = await query(
-      'update pguser set "accessToken" = $1, "updatedAt"=$2 where "id" = $3',
+      'update pgowner set "accessToken" = $1, "updatedAt"=$2 where "id" = $3',
       [token.data, parseInt(moment.utc().valueOf()), findUser.rows[0].id],
     );
 
@@ -85,14 +85,15 @@ let login = async (req, res) => {
   }
 };
 
-let emailVerification = async (req, res) => {
-  console.log('Email Verification called...');
+let ownerEmailVerification = async (req, res) => {
+  console.log('Owner Email Verification called...');
   try {
     // get the data from the req body
     let { token } = req.body;
 
     // get the userId from the middleware
     let userId = req.userId;
+    console.log('userId: ', userId);
 
     // validate Data
     let validationResult = await userAuthValidation({
@@ -109,11 +110,10 @@ let emailVerification = async (req, res) => {
     }
 
     let findUser = await query(
-      'select * from pguser where "id" = $1 and "isDeleted" =false and "isVerified" =false and "isActive" =true',
+      'select * from pgowner where "id" = $1 and "isDeleted" =false and "isVerified" =false and "isActive" =true',
       [userId],
     );
 
-    // compare token
     if (findUser.rowCount < 1 || findUser.rows[0].accessToken !== token) {
       return res.status(400).json({
         message: 'Invalid Token!',
@@ -132,7 +132,7 @@ let emailVerification = async (req, res) => {
 
     // update the new token and isVerified status in the db
     let updateUser = await query(
-      'update pguser set "accessToken" = $1,"updatedAt"=$2,"isVerified"=$3 where "id" = $4',
+      'update pgowner set "accessToken" = $1,"updatedAt"=$2,"isVerified"=$3 where "id" = $4',
       [newToken.data, moment.utc().valueOf(), true, userId],
     );
 
@@ -153,8 +153,8 @@ let emailVerification = async (req, res) => {
   }
 };
 
-let forgotPassword = async (req, res) => {
-  console.log('forgotPassword called....');
+let ownerForgotPassword = async (req, res) => {
+  console.log('Owner forgotPassword called....');
   try {
     let { email } = req.body;
     // validate Data
@@ -173,7 +173,7 @@ let forgotPassword = async (req, res) => {
 
     // find the active user in DB
     let findUser = await query(
-      'select * from pguser where "email"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      'select * from pgowner where "email"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
       [email],
     );
 
@@ -195,7 +195,7 @@ let forgotPassword = async (req, res) => {
 
     // update the new token and isVerified status in the db
     let updateUser = await query(
-      'update pguser set "accessToken" = $1,"updatedAt"=$2 where "id" = $3',
+      'update pgowner set "accessToken" = $1,"updatedAt"=$2 where "id" = $3',
       [token.data, moment.utc().valueOf(), findUser.rows[0].id],
     );
 
@@ -242,8 +242,8 @@ let forgotPassword = async (req, res) => {
   }
 };
 
-let verifyForgotEmail = async (req, res) => {
-  console.log('verifyForgotEmail called...');
+let ownerVerifyForgotEmail = async (req, res) => {
+  console.log('Owner verifyForgotEmail called...');
   try {
     // get the data from the req body
     let { token } = req.body;
@@ -267,7 +267,7 @@ let verifyForgotEmail = async (req, res) => {
 
     // find the active user in DB
     let findUser = await query(
-      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      'select * from pgowner where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
       [userId],
     );
 
@@ -290,7 +290,7 @@ let verifyForgotEmail = async (req, res) => {
 
     // update the new token and isVerified status in the db
     let updateUser = await query(
-      'update pguser set "accessToken" = $1,"updatedAt"=$2 where "id" = $3',
+      'update pgowner set "accessToken" = $1,"updatedAt"=$2 where "id" = $3',
       [newToken.data, moment.utc().valueOf(), userId],
     );
 
@@ -311,8 +311,8 @@ let verifyForgotEmail = async (req, res) => {
   }
 };
 
-let changeForgotPassword = async (req, res) => {
-  console.log('changePassword called...');
+let ownerChangeForgotPassword = async (req, res) => {
+  console.log('Owner changePassword called...');
   try {
     // get the data from the req body
     let { password } = req.body;
@@ -336,7 +336,7 @@ let changeForgotPassword = async (req, res) => {
 
     // find the active user in DB
     let findUser = await query(
-      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      'select * from pgowner where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
       [userId],
     );
 
@@ -360,7 +360,7 @@ let changeForgotPassword = async (req, res) => {
     let token = await generateToken(payload);
 
     let updateUser = await query(
-      'update pguser set "accessToken" = $1,"updatedAt"=$2,"password"=$3 where "id" = $4',
+      'update pgowner set "accessToken" = $1,"updatedAt"=$2,"password"=$3 where "id" = $4',
       [token.data, moment.utc().valueOf(), hash, userId],
     );
 
@@ -378,9 +378,9 @@ let changeForgotPassword = async (req, res) => {
   }
 };
 module.exports = {
-  login,
-  emailVerification,
-  forgotPassword,
-  verifyForgotEmail,
-  changeForgotPassword,
+  ownerLogin,
+  ownerEmailVerification,
+  ownerForgotPassword,
+  ownerVerifyForgotEmail,
+  ownerChangeForgotPassword,
 };

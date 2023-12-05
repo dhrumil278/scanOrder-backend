@@ -8,7 +8,10 @@ const jwt = require('jsonwebtoken');
 const ejs = require('ejs');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
 const moment = require('moment');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 
 require('dotenv').config();
 
@@ -32,14 +35,7 @@ const corsOptions = {
 
 // DB connection
 const pool = new Pool({
-  // user: process.env.DB_USER,
-  // password: process.env.DB_PASSWORD,
-  // host: process.env.DB_HOST,
-  // port: process.env.DB_PORT, // default Postgres port
-  // database: process.env.DB_DATABASE,
-  connectionString:
-    // 'postgres://scanorder_user:uFM7uss9EAjh95qJ0Ubkjxq87QHQOnoD@dpg-clmlqdsjtl8s73a5vqtg-a/scanorder',
-    `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}`,
+  connectionString: `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_DATABASE}`,
 });
 
 // query function
@@ -54,6 +50,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
+});
+
 // API Events
 const Events = {
   REGISTER: 1,
@@ -62,6 +64,12 @@ const Events = {
   FORGOT_PASSWORD: 4,
   VERIFY_FORGOT_EMAIL: 5,
   CHANGE_FORGOT_PASSWORD: 6,
+  UPDATE_PROFILE: 7,
+  USER_CHANGE_PASSWORD: 8,
+  ADD_FOOD_ITEM: 9,
+  UPDATE_FOOD: 10,
+  DELETE_FOOD: 11,
+  GET_ONE_FOOD: 12,
 };
 
 const templatesType = {
@@ -79,6 +87,9 @@ module.exports = {
   path,
   transporter,
   moment,
+  multer,
+  fs,
+  cloudinary,
   corsOptions,
   query,
   Events,
