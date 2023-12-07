@@ -70,6 +70,9 @@ const Events = {
   UPDATE_FOOD: 10,
   DELETE_FOOD: 11,
   GET_ONE_FOOD: 12,
+  GET_FOOD_BY_CATEGORY: 13,
+  BOOKMARK_FOOD: 14,
+  ORDER_CREATE: 15,
 };
 
 const templatesType = {

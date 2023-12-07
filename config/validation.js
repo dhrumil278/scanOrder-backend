@@ -225,6 +225,78 @@ const foodValidation = (reqData) => {
         };
         break;
 
+      case Events.GET_FOOD_BY_CATEGORY:
+        data = {
+          category: reqData.category,
+          shopId: reqData.shopId,
+        };
+        rules = {
+          category: 'string|required',
+          shopId: 'string|required',
+        };
+        break;
+
+      case Events.BOOKMARK_FOOD:
+        data = {
+          foodId: reqData.foodId,
+        };
+        rules = {
+          foodId: 'string|required',
+        };
+        break;
+
+      default:
+        // nothing to do with default
+        break;
+    }
+
+    const validate = new Validator(data, rules);
+    let result = {};
+
+    if (validate.passes()) {
+      console.log('valiation success');
+      result['hasError'] = false;
+    }
+    if (validate.fails()) {
+      console.log('validation fails');
+      result['hasError'] = true;
+      result['error'] = validate.errors.all();
+    }
+
+    return result;
+  } catch (error) {
+    console.log('error: ', error);
+    return {
+      hasError: true,
+      error: error,
+    };
+  }
+};
+
+const orderValidation = (reqData) => {
+  console.log('food data Validation called...');
+  try {
+    let data;
+    let rules;
+
+    switch (reqData.eventCode) {
+      case Events.ADD_FOOD_ITEM:
+        data = {
+          title: reqData.title,
+          description: reqData.description,
+          price: reqData.price,
+          isVeg: reqData.isVeg,
+          category: reqData.category,
+        };
+        rules = {
+          title: 'string|required',
+          description: 'string|required',
+          price: 'numeric|required',
+          isVeg: 'boolean|required',
+          category: 'string|required',
+        };
+        break;
+
       default:
         // nothing to do with default
         break;
@@ -256,4 +328,5 @@ module.exports = {
   userValidation,
   userAuthValidation,
   foodValidation,
+  orderValidation,
 };

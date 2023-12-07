@@ -308,10 +308,123 @@ const getOneFood = async (req, res) => {
   }
 };
 
+const getFoodByCategory = async (req, res) => {
+  console.log('getFoodByCategory called...');
+  try {
+    let { category, shopId } = req.query;
+
+    // userId can be user'sId or shop's Id
+    let userId = req.userId;
+
+    // validate Data
+    let validationResult = await foodValidation({
+      category: category,
+      shopId: shopId,
+      eventCode: Events.GET_FOOD_BY_CATEGORY,
+    });
+
+    if (validationResult.hasError === true) {
+      return res.status(400).json({
+        message: 'Field Missing',
+        error: validationResult.error,
+      });
+    }
+
+    // find the active shop in DB
+    let findShop = await query(
+      'select * from pgowner where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [userId],
+    );
+
+    // find the active user in DB
+    let findUser = await query(
+      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [userId],
+    );
+
+    if (findShop.rowCount < 1 && findUser.rowCount < 1) {
+      return res.status(400).json({
+        message: 'Shop or User Not Found!',
+      });
+    }
+
+    let getFood = await query(
+      'select * from pgfood where "shopId" = $1 and "category"= $2 and "isDeleted" = $3',
+      [shopId, category, false],
+    );
+
+    return res.status(200).json({
+      message: 'Food!',
+      data: getFood.rows[0],
+    });
+  } catch (error) {
+    console.log('error: ', error);
+    return res.status(500).json({
+      message: 'Somethig Went Wrong!',
+      error: error,
+    });
+  }
+};
+
+const bookmarkFood = async (req, res) => {
+  console.log('bookmarkFood called...');
+  try {
+    let { foodId } = req.query;
+
+    // userId can be user'sId or shop's Id
+    let userId = req.userId;
+
+    // validate Data
+    let validationResult = await foodValidation({
+      foodId: foodId,
+      eventCode: Events.BOOKMARK_FOOD,
+    });
+
+    if (validationResult.hasError === true) {
+      return res.status(400).json({
+        message: 'Field Missing',
+        error: validationResult.error,
+      });
+    }
+
+    // find the active user in DB
+    let findUser = await query(
+      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [userId],
+    );
+
+    if (findUser.rowCount < 1) {
+      return res.status(400).json({
+        message: 'User Not Found!',
+      });
+    }
+
+    let bookmark = await query(
+      'insert into pgbookmark ("id","userId","foodId","createdAt","updatedAt") values($1,$2,$3,$4,$5) returning *',
+      [
+        uuidv4(),
+        userId,
+        foodId,
+        moment.utc().valueOf(),
+        moment.utc().valueOf(),
+      ],
+    );
+
+    return res.status(200).josn({
+      message: 'Food Bookmarked!',
+      data: bookmark.rows[0],
+    });
+  } catch (error) {
+    console.log('error: ', error);
+  }
+};
+
 module.exports = {
   addFoodItem,
   updateFood,
   deleteFood,
   getAllFood,
   getOneFood,
+  getFoodByCategory,
+  bookmarkFood,
 };
