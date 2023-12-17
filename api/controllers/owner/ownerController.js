@@ -26,7 +26,7 @@ let ownerRegister = async (req, res) => {
     // validate Data
     let validationResult = await userValidation({
       ...reqData,
-      eventCode: Events.REGISTER,
+      eventCode: Events.REGISTER_OWNER,
     });
 
     if (validationResult.hasError === true) {
