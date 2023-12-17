@@ -4,7 +4,9 @@ const { cors, express, corsOptions } = require('./config/constants');
 const app = express();
 
 // config middleweres
-app.use(cors(corsOptions));
+app.use(cors({
+    origin: '*'
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
