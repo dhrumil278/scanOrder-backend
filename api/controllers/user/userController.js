@@ -71,6 +71,7 @@ let registerUser = async (req, res) => {
     };
 
     let token = await generateToken(payload);
+    console.log('token: ', token);
 
     // save token in DB
     let updateUser = await query(
@@ -79,6 +80,7 @@ let registerUser = async (req, res) => {
     );
 
     let link = `${process.env.REDIRECT_LINK}/emailverification?token=${token.data}`;
+    console.log('link: ', link);
 
     let mailTemplateData = {
       mailData: {

@@ -90,9 +90,11 @@ let emailVerification = async (req, res) => {
   try {
     // get the data from the req body
     let { token } = req.body;
+    console.log('token: ', token);
 
     // get the userId from the middleware
     let userId = req.userId;
+    console.log('userId: ', userId);
 
     // validate Data
     let validationResult = await userAuthValidation({

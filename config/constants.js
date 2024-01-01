@@ -73,6 +73,7 @@ const Events = {
   GET_FOOD_BY_CATEGORY: 13,
   BOOKMARK_FOOD: 14,
   ORDER_CREATE: 15,
+  REGISTER_OWNER: 16,
 };
 
 const templatesType = {

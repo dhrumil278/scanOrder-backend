@@ -4,7 +4,9 @@ const isAuthorized = async (req, res, next) => {
   console.log('Is Authorized Called...');
   try {
     if (req.headers.authorization) {
+      console.log('req.headers.authorization: ', req.headers.authorization);
       const token = req.headers.authorization.split(' ')[1];
+      console.log('token: ', token);
 
       if (token && token !== null) {
         const decode = await jwt.verify(token, process.env.JWT_SECRET_KEY);
