@@ -60,7 +60,7 @@ const userValidation = (reqData) => {
         rules = {
           firstname: 'string|required',
           lastname: 'string|required',
-          phone: 'string|numeric',
+          phone: 'numeric|required',
           address: 'string|required',
           city: 'string|required',
           state: 'string|required',
