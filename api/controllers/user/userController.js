@@ -208,6 +208,32 @@ let updateProfile = async (req, res) => {
   }
 };
 
+let getUserProfile = async (req, res) => {
+  try {
+    let userId = req.userId;
+
+    // find the active user in DB
+    let findUser = await query(
+      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [userId],
+    );
+
+    if (findUser.rowCount < 1) {
+      return res.status(400).json({
+        message: 'User Not Found!',
+      });
+    } else {
+      let { password, ...other } = findUser.rows[0];
+      return res.status(200).json({
+        message: 'Profile!',
+        data: other,
+      });
+    }
+  } catch (error) {
+    console.log('error: ', error);
+  }
+};
+
 const userChangePassword = async (req, res) => {
   console.log('userChangePassword called...');
   try {
@@ -274,4 +300,5 @@ module.exports = {
   registerUser,
   updateProfile,
   userChangePassword,
+  getUserProfile,
 };
