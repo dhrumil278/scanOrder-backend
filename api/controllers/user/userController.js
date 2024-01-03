@@ -50,12 +50,15 @@ let registerUser = async (req, res) => {
     // Generate the Hash Password
     let hash = await bcrypt.hash(password, 10);
 
+    let otp = Math.floor(Math.random() * 90000) + 100000;
+
     let queryString =
-      'insert into pguser ("id","username","email","password","createdAt","updatedAt") values($1,$2,$3,$4,$5,$6) returning *';
+      'insert into pguser ("id","username","email","otp","password","createdAt","updatedAt") values($1,$2,$3,$4,$5,$6,$7) returning *';
     let values = [
       uuidv4(),
       username,
       email,
+      otp,
       hash,
       parseInt(moment.utc().valueOf()),
       parseInt(moment.utc().valueOf()),
@@ -75,12 +78,12 @@ let registerUser = async (req, res) => {
 
     // save token in DB
     let updateUser = await query(
-      'update pguser set "accessToken" = $1,"updatedAt"=$2 where id = $3',
+      'update pguser set "accessToken" = $1,"updatedAt"=$2 where id = $3 returning *',
       [token.data, moment.utc().valueOf(), userResult.rows[0].id],
     );
 
-    let link = `${process.env.REDIRECT_LINK}/emailverification?token=${token.data}`;
-    console.log('link: ', link);
+    // let link = `${process.env.REDIRECT_LINK}/emailverification?token=${token.data}`;
+    console.log('otp: ', otp);
 
     let mailTemplateData = {
       mailData: {
@@ -90,7 +93,7 @@ let registerUser = async (req, res) => {
         cc: '',
       },
       templateData: {
-        link: link,
+        otp: otp,
       },
       eventCode: templatesType.VERIFICATION_EMAIL,
     };
@@ -107,7 +110,7 @@ let registerUser = async (req, res) => {
         error: mailresult.error,
       });
     } else {
-      let { password, ...other } = userResult.rows[0];
+      let { password, otp, ...other } = updateUser.rows[0];
       return res.status(200).json({
         data: other,
         message: 'Verification Email Send!',

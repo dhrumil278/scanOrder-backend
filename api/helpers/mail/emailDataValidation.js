@@ -21,7 +21,7 @@ const emailDataValidation = async (reqData) => {
             cc: reqData.mailData.cc,
           },
           templateData: {
-            link: reqData.templateData.link,
+            otp: reqData.templateData.otp,
             template: 'verifyEmail.ejs',
           },
         };
@@ -34,7 +34,7 @@ const emailDataValidation = async (reqData) => {
             cc: 'string',
           },
           templateData: {
-            link: 'string|required',
+            otp: 'numeric|required',
             template: 'string|required',
           },
         };
@@ -49,7 +49,7 @@ const emailDataValidation = async (reqData) => {
             cc: reqData.mailData.cc,
           },
           templateData: {
-            link: reqData.templateData.link,
+            otp: reqData.templateData.otp,
             template: 'forgotPassVerify.ejs',
           },
         };
@@ -62,7 +62,7 @@ const emailDataValidation = async (reqData) => {
             cc: 'string',
           },
           templateData: {
-            link: 'string|required',
+            otp: 'numeric|required',
             template: 'string|required',
           },
         };

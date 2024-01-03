@@ -128,9 +128,11 @@ const userAuthValidation = (reqData) => {
       case Events.EMAIL_VERIFY:
         data = {
           token: reqData.token,
+          otp: reqData.otp,
         };
         rules = {
           token: 'string|required',
+          otp: 'string|required',
         };
         break;
 

@@ -89,8 +89,7 @@ let emailVerification = async (req, res) => {
   console.log('Email Verification called...');
   try {
     // get the data from the req body
-    let { token } = req.body;
-    console.log('token: ', token);
+    let { token, otp } = req.body;
 
     // get the userId from the middleware
     let userId = req.userId;
@@ -99,6 +98,7 @@ let emailVerification = async (req, res) => {
     // validate Data
     let validationResult = await userAuthValidation({
       token: token,
+      otp: otp,
       eventCode: Events.EMAIL_VERIFY,
     });
 
@@ -111,14 +111,14 @@ let emailVerification = async (req, res) => {
     }
 
     let findUser = await query(
-      'select * from pguser where "id" = $1 and "isDeleted" =false and "isVerified" =false and "isActive" =true',
-      [userId],
+      'select * from pguser where "id" = $1 and "otp" = $2 and "isDeleted" =false and "isVerified" =false and "isActive" =true',
+      [userId, otp],
     );
 
     // compare token
     if (findUser.rowCount < 1 || findUser.rows[0].accessToken !== token) {
       return res.status(400).json({
-        message: 'Invalid Token!',
+        message: 'Invalid OTP!',
       });
     }
 
@@ -134,16 +134,14 @@ let emailVerification = async (req, res) => {
 
     // update the new token and isVerified status in the db
     let updateUser = await query(
-      'update pguser set "accessToken" = $1,"updatedAt"=$2,"isVerified"=$3 where "id" = $4',
+      'update pguser set "accessToken" = $1,"updatedAt"=$2,"isVerified"=$3 where "id" = $4 returning *',
       [newToken.data, moment.utc().valueOf(), true, userId],
     );
-
+    let { password, ...other } = updateUser.rows[0];
     // return the success token
     return res.status(200).json({
       message: 'Email Verified!',
-      data: {
-        token: newToken.data,
-      },
+      data: other,
     });
   } catch (error) {
     console.log('error: ', error);
@@ -195,13 +193,16 @@ let forgotPassword = async (req, res) => {
     // call function for generate the token
     let token = await generateToken(payload);
 
+    let otp = Math.floor(Math.random() * 90000) + 100000;
+    console.log('otp: ', otp);
+
     // update the new token and isVerified status in the db
     let updateUser = await query(
-      'update pguser set "accessToken" = $1,"updatedAt"=$2 where "id" = $3',
-      [token.data, moment.utc().valueOf(), findUser.rows[0].id],
+      'update pguser set "accessToken" = $1, "otp"=$2, "updatedAt"=$3 where "id" = $4 returning *',
+      [token.data, otp, moment.utc().valueOf(), findUser.rows[0].id],
     );
 
-    let link = `${process.env.REDIRECT_LINK}/forgotPasswordConfirmation?token=${token.data}`;
+    // let link = `${process.env.REDIRECT_LINK}/forgotPasswordConfirmation?token=${token.data}`;
 
     let mailTemplateData = {
       mailData: {
@@ -211,7 +212,7 @@ let forgotPassword = async (req, res) => {
         cc: '',
       },
       templateData: {
-        link: link,
+        otp: otp,
       },
       eventCode: templatesType.FORGOT_PASS_VERIFICATION,
     };
@@ -228,10 +229,10 @@ let forgotPassword = async (req, res) => {
         error: mailresult.error,
       });
     } else {
-      let { password, ...other } = findUser.rows[0];
+      let { password, ...other } = updateUser.rows[0];
       return res.status(200).json({
-        data: other,
         message: 'Verification Email Send!',
+        data: other,
       });
     }
   } catch (error) {
@@ -248,7 +249,7 @@ let verifyForgotEmail = async (req, res) => {
   console.log('verifyForgotEmail called...');
   try {
     // get the data from the req body
-    let { token } = req.body;
+    let { token, otp } = req.body;
 
     // get the userId from the middleware
     let userId = req.userId;
@@ -256,6 +257,7 @@ let verifyForgotEmail = async (req, res) => {
     // validate Data
     let validationResult = await userAuthValidation({
       token: token,
+      otp: otp,
       eventCode: Events.VERIFY_FORGOT_EMAIL,
     });
 
@@ -269,14 +271,14 @@ let verifyForgotEmail = async (req, res) => {
 
     // find the active user in DB
     let findUser = await query(
-      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
-      [userId],
+      'select * from pguser where "id"=$1 and "otp"=$2 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [userId, otp],
     );
 
     // compare token
     if (findUser.rowCount < 1 || findUser.rows[0].accessToken !== token) {
       return res.status(400).json({
-        message: 'Invalid Token',
+        message: 'Invalid OTP',
       });
     }
 
@@ -292,16 +294,15 @@ let verifyForgotEmail = async (req, res) => {
 
     // update the new token and isVerified status in the db
     let updateUser = await query(
-      'update pguser set "accessToken" = $1,"updatedAt"=$2 where "id" = $3',
+      'update pguser set "accessToken" = $1,"updatedAt"=$2 where "id" = $3 returning *',
       [newToken.data, moment.utc().valueOf(), userId],
     );
 
+    let { password, ...other } = updateUser.rows[0];
     // return the success token
     return res.status(200).json({
       message: 'Forgot Password Email Verified!',
-      data: {
-        token: newToken.data,
-      },
+      data: other,
     });
   } catch (error) {
     console.log('error: ', error);
