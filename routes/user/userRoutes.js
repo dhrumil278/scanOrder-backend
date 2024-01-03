@@ -12,6 +12,6 @@ const router = express.Router();
 router.post('/register', registerUser);
 router.post('/updateProfile', hasToken, isAuthorized, updateProfile);
 router.post('/userPasswordChanged', hasToken, isAuthorized, userChangePassword);
-router.post('/getUserProfile', hasToken, isAuthorized, getUserProfile);
+router.get('/getUserProfile', hasToken, isAuthorized, getUserProfile);
 
 module.exports = router;
