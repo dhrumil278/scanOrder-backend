@@ -7,18 +7,18 @@ const userValidation = (reqData) => {
     let rules;
 
     switch (reqData.eventCode) {
-      case Events.REGISTER_OWNER:
-        data = {
-          email: reqData.email,
-          password: reqData.password,
-          username: reqData.username,
-        };
-        rules = {
-          email: 'string|required',
-          password: 'string|required',
-          username: 'string|required',
-        };
-        break;
+      // case Events.REGISTER_OWNER:
+      //   data = {
+      //     email: reqData.email,
+      //     password: reqData.password,
+      //     username: reqData.username,
+      //   };
+      //   rules = {
+      //     email: 'string|required',
+      //     password: 'string|required',
+      //     username: 'string|required',
+      //   };
+      //   break;
       case Events.REGISTER_OWNER:
         data = {
           email: reqData.email,

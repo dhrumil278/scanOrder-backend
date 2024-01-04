@@ -5,6 +5,8 @@ let {
   bcrypt,
   templatesType,
   moment,
+  cloudinary,
+  fs,
 } = require('../../../config/constants');
 let { userValidation } = require('../../../config/validation');
 let { generateToken } = require('../../helpers/jwt/create');
@@ -208,6 +210,63 @@ let updateProfile = async (req, res) => {
   }
 };
 
+let updateAvatar = async (req, res) => {
+  console.log('updateAvatar called..');
+  try {
+    let files = req.files;
+
+    // get the userId from the middleware
+    let userId = req.userId;
+
+    if (!files || !files[0]) {
+      return res.status(400).json({
+        message: 'Field Missing',
+      });
+    }
+
+    // find the active user in DB
+    let findUser = await query(
+      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [userId],
+    );
+
+    if (findUser.rowCount < 1) {
+      return res.status(400).json({
+        message: 'User Not Found!',
+      });
+    }
+    let url = await cloudinary.uploader.upload(req.files[0].path);
+    url = url.secure_url;
+
+    // save token in DB
+    let updateUser = await query(
+      'update pguser set "avatar" = $1,"updatedAt"=$2 where id = $3 returning *',
+      [url, moment.utc().valueOf(), userId],
+    );
+
+    let { avatar, ...other } = updateUser.rows[0];
+
+    await Promise.all(
+      req.files.map(async (file) => {
+        await fs.unlink(file.path, (err) => null);
+      }),
+    );
+
+    return res.status(200).json({
+      message: 'Profile Updated!',
+      data: {
+        avatar: avatar,
+      },
+    });
+  } catch (error) {
+    console.log('error: ', error);
+    return res.status(500).json({
+      message: 'Somethig Went Wrong!',
+      error: error,
+    });
+  }
+};
+
 let getUserProfile = async (req, res) => {
   try {
     let userId = req.userId;
@@ -301,4 +360,5 @@ module.exports = {
   updateProfile,
   userChangePassword,
   getUserProfile,
+  updateAvatar,
 };

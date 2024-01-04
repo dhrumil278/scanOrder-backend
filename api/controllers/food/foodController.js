@@ -308,6 +308,46 @@ const getOneFood = async (req, res) => {
   }
 };
 
+const getAllCategory = async (req, res) => {
+  console.log('getAllFood called...');
+  try {
+    // get the shopId from the middleware
+    let userId = req.userId;
+
+    //get shop Id
+    let { shopId } = req.body;
+
+    // find the active user in DB
+    let findShop = await query(
+      'select * from pgowner where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [shopId],
+    );
+
+    if (findShop.rowCount < 1) {
+      return res.status(400).json({
+        message: 'Shop Not Found!',
+      });
+    }
+
+    let allCategories = await query(
+      'select category from pgfood where "shopId" = $1 and "isDeleted" = $2 group by category',
+      [shopId, false],
+    );
+
+    console.log('allCategories.rows: ', allCategories.rows);
+    return res.status(200).json({
+      message: 'Food Updated!',
+      data: allCategories.rows,
+    });
+  } catch (error) {
+    console.log('error: ', error);
+    return res.status(500).json({
+      message: 'Somethig Went Wrong!',
+      error: error,
+    });
+  }
+};
+
 const getFoodByCategory = async (req, res) => {
   console.log('getFoodByCategory called...');
   try {
@@ -355,7 +395,7 @@ const getFoodByCategory = async (req, res) => {
 
     return res.status(200).json({
       message: 'Food!',
-      data: getFood.rows[0],
+      data: getFood.rows,
     });
   } catch (error) {
     console.log('error: ', error);
@@ -427,4 +467,5 @@ module.exports = {
   getOneFood,
   getFoodByCategory,
   bookmarkFood,
+  getAllCategory,
 };
