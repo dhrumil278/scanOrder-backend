@@ -261,9 +261,8 @@ const getAllFood = async (req, res) => {
 const getOneFood = async (req, res) => {
   console.log('getOneFood called...');
   try {
-    let { foodId } = req.body;
-    // get the shopId from the middleware
-    let shopId = req.userId;
+    console.log('req.params: ', req.params);
+    let { foodId, shopId } = req.params;
 
     // validate Data
     let validationResult = await foodValidation({
@@ -291,7 +290,7 @@ const getOneFood = async (req, res) => {
     }
 
     let oneFood = await query(
-      'select * from pgfood where "shopId" = $1 and "id"= $2" and isDeleted" = $3',
+      'select * from pgfood where "shopId" = $1 and "id"= $2 and "isDeleted" = $3',
       [shopId, foodId, false],
     );
 

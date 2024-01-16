@@ -17,7 +17,7 @@ router.post('/addFoodItem', hasToken, isAuthorized, upload, addFoodItem);
 router.post('/updateFood', hasToken, isAuthorized, updateFood);
 router.post('/deleteFood', hasToken, isAuthorized, deleteFood);
 router.get('/getAllFood', hasToken, isAuthorized, getAllFood);
-router.get('/getOneFood', hasToken, isAuthorized, getOneFood);
+router.get('/getOneFood/:foodId/:shopId', hasToken, isAuthorized, getOneFood);
 router.get('/getFoodByCategory', hasToken, isAuthorized, getFoodByCategory);
 router.post('/getAllCategory', hasToken, isAuthorized, getAllCategory);
 
