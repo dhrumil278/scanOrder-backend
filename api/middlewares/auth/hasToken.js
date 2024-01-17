@@ -1,7 +1,6 @@
 const hasToken = async (req, res, next) => {
   console.log('has Token Called...');
   try {
-    console.log('req.headers: ', req.headers);
     if (
       req.headers.authorization &&
       req.headers.authorization.split(' ')[0] === 'Bearer'
@@ -9,13 +8,13 @@ const hasToken = async (req, res, next) => {
       return next();
     } else {
       return res.status(300).json({
-        message: 'Forbidden!',
+        message: 'Token not Found!',
       });
     }
   } catch (error) {
     console.log('error: ', error);
-    return res.status(300).json({
-      message: 'Forbidden!',
+    return res.status(500).json({
+      message: 'Internal Server Error!',
     });
   }
 };

@@ -351,9 +351,12 @@ const getFoodByCategory = async (req, res) => {
   console.log('getFoodByCategory called...');
   try {
     let { category, shopId } = req.query;
+    console.log('category: ', category);
+    console.log('shopId: ', shopId);
 
     // userId can be user'sId or shop's Id
     let userId = req.userId;
+    console.log('userId: ', userId);
 
     // validate Data
     let validationResult = await foodValidation({
@@ -381,6 +384,7 @@ const getFoodByCategory = async (req, res) => {
       [userId],
     );
 
+    console.log('findUser: ', findUser);
     if (findShop.rowCount < 1 && findUser.rowCount < 1) {
       return res.status(400).json({
         message: 'Shop or User Not Found!',
@@ -388,9 +392,10 @@ const getFoodByCategory = async (req, res) => {
     }
 
     let getFood = await query(
-      'select * from pgfood where "shopId" = $1 and "category"= $2 and "isDeleted" = $3',
-      [shopId, category, false],
+      'select f.*, case when b."foodId" = f."id" then true else false end as isBookmark from (select * from pgbookmark where "userId"=$1) as b right join (select * from pgfood where "shopId" = $2 and "category"= $3 and "isDeleted" = false)as f on b."foodId" = f."id"',
+      [userId, shopId, category],
     );
+    // 'select * from pgfood where "shopId" = $1 and "category"= $2 and "isDeleted" = $3',
 
     return res.status(200).json({
       message: 'Food!',
@@ -438,26 +443,97 @@ const bookmarkFood = async (req, res) => {
       });
     }
 
-    let bookmark = await query(
-      'insert into pgbookmark ("id","userId","foodId","createdAt","updatedAt") values($1,$2,$3,$4,$5) returning *',
-      [
-        uuidv4(),
-        userId,
-        foodId,
-        moment.utc().valueOf(),
-        moment.utc().valueOf(),
-      ],
+    let findBookmark = await query(
+      'select * from pgbookmark where "foodId"=$1 and "userId"=$2',
+      [foodId, userId],
     );
-
-    return res.status(200).josn({
-      message: 'Food Bookmarked!',
-      data: bookmark.rows[0],
-    });
+    if (findBookmark.rowCount > 0) {
+      let removeBookmark = await query(
+        'delete from pgbookmark where "foodId"=$1 and "userId"=$2',
+        [foodId, userId],
+      );
+      console.log('removeBookmark: ', removeBookmark);
+      return res.status(200).json({
+        message: 'Food Unbookmarked!',
+      });
+    } else {
+      let bookmark = await query(
+        'insert into pgbookmark ("id","userId","foodId","createdAt","updatedAt") values($1,$2,$3,$4,$5) returning *',
+        [
+          uuidv4(),
+          userId,
+          foodId,
+          moment.utc().valueOf(),
+          moment.utc().valueOf(),
+        ],
+      );
+      return res.status(200).json({
+        message: 'Food Bookmarked!',
+      });
+    }
   } catch (error) {
     console.log('error: ', error);
+    return res.status(500).json({
+      message: 'Somethig Went Wrong!',
+      error: error,
+    });
   }
 };
 
+const getBookmarkFood = async (req, res) => {
+  console.log('getBookmarkFood called....');
+  try {
+    let { shopId } = req.query;
+    let userId = req.userId;
+
+    // validate Data
+    let validationResult = await foodValidation({
+      shopId: shopId,
+      eventCode: Events.GET_BOOKMARK_FOOD,
+    });
+
+    if (validationResult.hasError === true) {
+      return res.status(400).json({
+        message: 'Field Missing',
+        error: validationResult.error,
+      });
+    }
+
+    // find the active shop in DB
+    let findShop = await query(
+      'select * from pgowner where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [shopId],
+    );
+
+    // find the active user in DB
+    let findUser = await query(
+      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [userId],
+    );
+
+    if (findShop.rowCount < 1 && findUser.rowCount < 1) {
+      return res.status(400).json({
+        message: 'Shop or User Not Found!',
+      });
+    }
+
+    let getBookMarkFood = await query(
+      'select f.*, case when b."foodId" = f."id" then true else false end as isBookmark from (select * from pgbookmark where "userId"=$1) as b join (select * from pgfood where "shopId" = $2 and "isDeleted" = false)as f on b."foodId" = f."id"',
+      [userId, shopId],
+    );
+
+    return res.status(200).json({
+      message: 'Bookmarked Food!',
+      data: getBookMarkFood.rows,
+    });
+  } catch (error) {
+    console.log('error: ', error);
+    return res.status(500).json({
+      message: 'Somethig Went Wrong!',
+      error: error,
+    });
+  }
+};
 module.exports = {
   addFoodItem,
   updateFood,
@@ -467,4 +543,5 @@ module.exports = {
   getFoodByCategory,
   bookmarkFood,
   getAllCategory,
+  getBookmarkFood,
 };

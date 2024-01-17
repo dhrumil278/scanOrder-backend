@@ -271,6 +271,15 @@ const foodValidation = (reqData) => {
         };
         break;
 
+      case Events.GET_BOOKMARK_FOOD:
+        data = {
+          shopId: reqData.shopId,
+        };
+        rules = {
+          shopId: 'string|required',
+        };
+        break;
+
       default:
         // nothing to do with default
         break;

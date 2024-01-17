@@ -74,6 +74,7 @@ const Events = {
   BOOKMARK_FOOD: 14,
   ORDER_CREATE: 15,
   REGISTER_OWNER: 16,
+  GET_BOOKMARK_FOOD: 17,
 };
 
 const templatesType = {
