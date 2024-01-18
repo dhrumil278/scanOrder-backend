@@ -280,6 +280,17 @@ const foodValidation = (reqData) => {
         };
         break;
 
+      case Events.ADD_TO_CART_FOOD:
+        data = {
+          shopId: reqData.shopId,
+          foodId: reqData.foodId,
+        };
+        rules = {
+          shopId: 'string|required',
+          foodId: 'string|required',
+        };
+        break;
+
       default:
         // nothing to do with default
         break;

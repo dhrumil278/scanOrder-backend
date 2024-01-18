@@ -75,6 +75,7 @@ const Events = {
   ORDER_CREATE: 15,
   REGISTER_OWNER: 16,
   GET_BOOKMARK_FOOD: 17,
+  ADD_TO_CART_FOOD: 18,
 };
 
 const templatesType = {

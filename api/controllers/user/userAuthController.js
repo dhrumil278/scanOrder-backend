@@ -56,7 +56,7 @@ let login = async (req, res) => {
     let payload = {
       id: findUser.rows[0].id,
       secretKey: process.env.JWT_SECRET_KEY,
-      expiresIn: '3d',
+      expiresIn: '30d',
     };
 
     // function for generate the token

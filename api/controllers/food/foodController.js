@@ -384,7 +384,6 @@ const getFoodByCategory = async (req, res) => {
       [userId],
     );
 
-    console.log('findUser: ', findUser);
     if (findShop.rowCount < 1 && findUser.rowCount < 1) {
       return res.status(400).json({
         message: 'Shop or User Not Found!',
@@ -392,8 +391,8 @@ const getFoodByCategory = async (req, res) => {
     }
 
     let getFood = await query(
-      'select f.*, case when b."foodId" = f."id" then true else false end as isBookmark from (select * from pgbookmark where "userId"=$1) as b right join (select * from pgfood where "shopId" = $2 and "category"= $3 and "isDeleted" = false)as f on b."foodId" = f."id"',
-      [userId, shopId, category],
+      'select a.*, c."quantity" as quantity, case when c."foodId" = a."id" then true else false end as isAddedInCart from (select * from pgaddtocart where "userId"=$1 and "isDeleted"=false) as c right join (select f.*, case when b."foodId" = f."id" then true else false end as isBookmark from (select * from pgbookmark where "userId"=$2) as b right join (select * from pgfood where "shopId" = $3 and "category"= $4 and "isDeleted" = false)as f on b."foodId" = f."id") as a on a."id"=c."foodId"',
+      [userId, userId, shopId, category],
     );
     // 'select * from pgfood where "shopId" = $1 and "category"= $2 and "isDeleted" = $3',
 
@@ -534,6 +533,103 @@ const getBookmarkFood = async (req, res) => {
     });
   }
 };
+
+const addToCartFood = async (req, res) => {
+  console.log('addToCartFood called....');
+  try {
+    let { shopId, foodId, quantity } = req.body;
+    let userId = req.userId;
+
+    // validate Data
+    let validationResult = await foodValidation({
+      shopId: shopId,
+      foodId: foodId,
+      quantity: quantity,
+      eventCode: Events.ADD_TO_CART_FOOD,
+    });
+
+    if (validationResult.hasError === true) {
+      return res.status(400).json({
+        message: 'Field Missing',
+        error: validationResult.error,
+      });
+    }
+
+    // find the active shop in DB
+    let findShop = await query(
+      'select * from pgowner where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [shopId],
+    );
+
+    // find the active user in DB
+    let findUser = await query(
+      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [userId],
+    );
+
+    if (findShop.rowCount < 1 && findUser.rowCount < 1) {
+      return res.status(400).json({
+        message: 'Shop or User Not Found!',
+      });
+    }
+
+    let findFoodInAddToCart = await query(
+      'select * from pgaddtocart where "foodId"=$1 and "userId"=$2 and "shopId"=$3',
+      [foodId, userId, shopId],
+    );
+
+    if (findFoodInAddToCart.rowCount > 0 && quantity >= 0) {
+      if (quantity === 0) {
+        console.log('remove query');
+        let removeFood = await query(
+          'update pgaddtocart set "isDeleted"=$1,"quantity"=$2 where "userId"=$3 and "foodId" = $4 and "shopId"=$5',
+          [true, 0, userId, foodId, shopId],
+        );
+
+        if (removeFood.rowCount > 0) {
+          return res.status(200).json({
+            message: 'Food Removed From Cart',
+          });
+        }
+      } else {
+        console.log('add Quanty');
+        let updateFoodInCart = await query(
+          'update pgaddtocart set "quantity"=$1, "isDeleted"=$2 where "userId"=$3 and "foodId" = $4 and "shopId"=$5',
+          [quantity, false, userId, foodId, shopId],
+        );
+        if (updateFoodInCart.rowCount > 0) {
+          return res.status(200).json({
+            message: 'Food Updated In Cart',
+          });
+        }
+      }
+    } else {
+      let insertFood = await query(
+        'insert into pgaddtocart ("id","shopId","foodId","userId","quantity","createdAt","updatedAt") values($1,$2,$3,$4,$5,$6,$7)',
+        [
+          uuidv4(),
+          shopId,
+          foodId,
+          userId,
+          quantity,
+          moment.utc().valueOf(),
+          moment.utc().valueOf(),
+        ],
+      );
+      if (insertFood.rowCount > 0) {
+        return res.status(200).json({
+          message: 'Food Added In Cart',
+        });
+      }
+    }
+  } catch (error) {
+    console.log('error: ', error);
+    return res.status(500).json({
+      message: 'Somethig Went Wrong!',
+      error: error,
+    });
+  }
+};
 module.exports = {
   addFoodItem,
   updateFood,
@@ -544,4 +640,5 @@ module.exports = {
   bookmarkFood,
   getAllCategory,
   getBookmarkFood,
+  addToCartFood,
 };

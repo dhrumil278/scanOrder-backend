@@ -9,6 +9,7 @@ const {
   getFoodByCategory,
   bookmarkFood,
   getBookmarkFood,
+  addToCartFood,
 } = require('../../api/controllers/food/foodController');
 const { upload } = require('../../api/middlewares/food/uploadFoodImage');
 const { hasToken } = require('../../api/middlewares/auth/hasToken');
@@ -24,5 +25,6 @@ router.get('/getFoodByCategory', hasToken, isAuthorized, getFoodByCategory);
 router.post('/getAllCategory', hasToken, isAuthorized, getAllCategory);
 router.post('/bookmark', hasToken, isAuthorized, bookmarkFood);
 router.get('/bookmarkFood', hasToken, isAuthorized, getBookmarkFood);
+router.post('/addFoodInCart', hasToken, isAuthorized, addToCartFood);
 
 module.exports = router;
