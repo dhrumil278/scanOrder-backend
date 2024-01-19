@@ -391,7 +391,7 @@ const getFoodByCategory = async (req, res) => {
     }
 
     let getFood = await query(
-      'select a.*, c."quantity" as quantity, case when c."foodId" = a."id" then true else false end as isAddedInCart from (select * from pgaddtocart where "userId"=$1 and "isDeleted"=false) as c right join (select f.*, case when b."foodId" = f."id" then true else false end as isBookmark from (select * from pgbookmark where "userId"=$2) as b right join (select * from pgfood where "shopId" = $3 and "category"= $4 and "isDeleted" = false)as f on b."foodId" = f."id") as a on a."id"=c."foodId"',
+      'select a.*, c."quantity" as quantity, case when c."foodId" = a."id" and c."quantity" > 0 then true else false end as isAddedInCart from (select * from pgaddtocart where "userId"=$1 and "isDeleted"=false) as c right join (select f.*, case when b."foodId" = f."id" then true else false end as isBookmark from (select * from pgbookmark where "userId"=$2) as b right join (select * from pgfood where "shopId" = $3 and "category"= $4 and "isDeleted" = false)as f on b."foodId" = f."id") as a on a."id"=c."foodId"',
       [userId, userId, shopId, category],
     );
     // 'select * from pgfood where "shopId" = $1 and "category"= $2 and "isDeleted" = $3',
