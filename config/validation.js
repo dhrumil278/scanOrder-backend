@@ -291,6 +291,15 @@ const foodValidation = (reqData) => {
         };
         break;
 
+      case Events.GET_ADD_TO_CART_FOOD:
+        data = {
+          shopId: reqData.shopId,
+        };
+        rules = {
+          shopId: 'string|required',
+        };
+        break;
+
       default:
         // nothing to do with default
         break;
@@ -340,6 +349,89 @@ const orderValidation = (reqData) => {
           price: 'numeric|required',
           isVeg: 'boolean|required',
           category: 'string|required',
+        };
+        break;
+
+      case Events.ORDER_CREATE:
+        data = {
+          foodIds: reqData.foodIds,
+          shopId: reqData.shopId,
+        };
+        rules = {
+          foodIds: 'array|required',
+          shopId: 'string|required',
+        };
+        break;
+
+      case Events.USER_ORDER_CONFIRM:
+        data = {
+          orderId: reqData.orderId,
+        };
+        rules = {
+          orderId: 'string|required',
+        };
+        break;
+
+      case Events.ORDER_ACCEPT:
+        data = {
+          orderId: reqData.orderId,
+        };
+        rules = {
+          orderId: 'string|required',
+        };
+        break;
+
+      case Events.OWNER_ORDER_REJECT:
+        data = {
+          orderId: reqData.orderId,
+          ownerId: reqData.ownerId,
+          reason: reqData.reason,
+        };
+        rules = {
+          orderId: 'string|required',
+          ownerId: 'string|required',
+          reason: [
+            'required',
+            {
+              in: [
+                'Ingredient Unavailability',
+                'Chef Unavailability',
+                'Out of Stock',
+                'Closing Time',
+                'Technical Issues',
+                'Special Events or Closures',
+                'Payment Issues',
+              ],
+            },
+          ],
+        };
+        break;
+
+      case Events.USER_ORDER_CANCEL:
+        data = {
+          orderId: reqData.orderId,
+          shopId: reqData.shopId,
+          reason: reqData.reason,
+        };
+        rules = {
+          orderId: 'string|required',
+          shopId: 'string|required',
+          reason: [
+            'required',
+            {
+              in: [
+                'Change of Plans',
+                'Incorrect Order Details',
+                'Long Wait Time',
+                'Unexpected Event',
+                'Payment Issues',
+                'Found a Better Option',
+                'Quality Concerns',
+                'Technical Issues',
+                'Personal Reasons',
+              ],
+            },
+          ],
         };
         break;
 

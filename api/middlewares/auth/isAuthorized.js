@@ -11,19 +11,19 @@ const isAuthorized = async (req, res, next) => {
         req.userId = decode.userId;
         return next();
       } else {
-        return res.status(400).json({
+        return res.status(403).json({
           message: 'Token not Found!',
         });
       }
     } else {
-      return res.status(300).json({
+      return res.status(403).json({
         message: 'Unauthorized User!',
       });
     }
   } catch (error) {
     console.log('error: ', error);
-    return res.status(500).json({
-      message: 'Internal Server Error!',
+    return res.status(403).json({
+      message: 'User Expired!',
     });
   }
 };

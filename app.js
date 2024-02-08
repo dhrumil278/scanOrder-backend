@@ -4,9 +4,11 @@ const { cors, express, corsOptions } = require('./config/constants');
 const app = express();
 
 // config middleweres
-app.use(cors({
-    origin: '*'
-}));
+app.use(
+  cors({
+    origin: '*',
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
@@ -23,6 +25,9 @@ const ownerRoute = require('./routes/owner/ownerRoutes');
 // Foods
 const foodRoute = require('./routes/food/foodRoutes');
 
+// Order
+const orderRoute = require('./routes/order/userOrderRoutes');
+
 // Default Routes
 // Users
 app.use('/user/auth', usersAuth);
@@ -32,8 +37,11 @@ app.use('/user', usersRoute);
 app.use('/owner/auth', ownerAuth);
 app.use('/owner', ownerRoute);
 
-// Owner
+// Food
 app.use('/food', foodRoute);
+
+// Order
+app.use('/order', orderRoute);
 
 // create a port
 const port = process.env.PORT || 8080;

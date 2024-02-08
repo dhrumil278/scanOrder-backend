@@ -7,14 +7,14 @@ const hasToken = async (req, res, next) => {
     ) {
       return next();
     } else {
-      return res.status(300).json({
+      return res.status(403).json({
         message: 'Token not Found!',
       });
     }
   } catch (error) {
     console.log('error: ', error);
-    return res.status(500).json({
-      message: 'Internal Server Error!',
+    return res.status(403).json({
+      message: 'User Expired!',
     });
   }
 };

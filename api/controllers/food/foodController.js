@@ -263,7 +263,7 @@ const getOneFood = async (req, res) => {
   try {
     console.log('req.params: ', req.params);
     let { foodId, shopId } = req.params;
-
+    let userId = req.userId;
     // validate Data
     let validationResult = await foodValidation({
       foodId: foodId,
@@ -289,10 +289,40 @@ const getOneFood = async (req, res) => {
       });
     }
 
-    let oneFood = await query(
-      'select * from pgfood where "shopId" = $1 and "id"= $2 and "isDeleted" = $3',
-      [shopId, foodId, false],
-    );
+    let queryString = `
+    SELECT A.*,
+      CASE
+              WHEN C."quantity" IS NULL THEN 0
+              ELSE C."quantity"
+      END AS QUANTITY,
+      CASE
+              WHEN C."foodId" = A."id"
+                        AND C."quantity" > 0 THEN TRUE
+              ELSE FALSE
+      END AS ISADDEDINCART
+    FROM
+      (SELECT *
+        FROM PGADDTOCART
+        WHERE "userId" = $1
+          AND "isDeleted" = FALSE
+          AND "quantity" > 0 ) AS C
+    RIGHT JOIN
+      (SELECT F.*,
+          CASE
+                  WHEN B."foodId" = F."id" THEN TRUE
+                  ELSE FALSE
+          END AS ISBOOKMARK
+        FROM
+          (SELECT *
+            FROM PGBOOKMARK
+            WHERE "userId" = $2) AS B
+        RIGHT JOIN
+          (SELECT *
+            FROM PGFOOD
+            WHERE "shopId" = $3
+              AND "id" = $4
+              AND "isDeleted" = FALSE) AS F ON B."foodId" = F."id") AS A ON A."id" = C."foodId"`;
+    let oneFood = await query(queryString, [userId, userId, shopId, foodId]);
 
     return res.status(200).json({
       message: 'Food!',
@@ -630,6 +660,74 @@ const addToCartFood = async (req, res) => {
     });
   }
 };
+
+const getAddToCartFood = async (req, res) => {
+  console.log('getAddToCartFood called....');
+  try {
+    let { shopId } = req.query;
+    let userId = req.userId;
+
+    // validate Data
+    let validationResult = await foodValidation({
+      shopId: shopId,
+      eventCode: Events.GET_ADD_TO_CART_FOOD,
+    });
+
+    if (validationResult.hasError === true) {
+      return res.status(400).json({
+        message: 'Field Missing',
+        error: validationResult.error,
+      });
+    }
+
+    // find the active shop in DB
+    let findShop = await query(
+      'select * from pgowner where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [shopId],
+    );
+
+    // find the active user in DB
+    let findUser = await query(
+      'select * from pguser where "id"=$1 and "isActive"=true and "isDeleted"=false and "isVerified"=true',
+      [userId],
+    );
+
+    if (findShop.rowCount < 1 && findUser.rowCount < 1) {
+      return res.status(400).json({
+        message: 'Shop or User Not Found!',
+      });
+    }
+    let queryString = `
+        SELECT A.*,
+      CASE
+              WHEN A."id" = B."foodId" THEN TRUE
+              ELSE FALSE
+      END AS ISBOOKMARK
+    FROM
+      (SELECT F.*,
+          C."quantity" AS QUANTITY
+        FROM PGFOOD AS F
+        JOIN PGADDTOCART AS C ON F."id" = C."foodId"
+        WHERE C."quantity" > 0
+          AND F."shopId" = $1
+          AND C."userId" = $2 )AS A
+    LEFT JOIN PGBOOKMARK AS B ON A."id" = B."foodId"`;
+
+    let getAddedFood = await query(queryString, [shopId, userId]);
+
+    return res.status(200).json({
+      message: 'Bookmarked Food!',
+      data: getAddedFood.rows,
+    });
+  } catch (error) {
+    console.log('error: ', error);
+    return res.status(500).json({
+      message: 'Somethig Went Wrong!',
+      error: error,
+    });
+  }
+};
+
 module.exports = {
   addFoodItem,
   updateFood,
@@ -641,4 +739,5 @@ module.exports = {
   getAllCategory,
   getBookmarkFood,
   addToCartFood,
+  getAddToCartFood,
 };
